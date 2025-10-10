@@ -23,7 +23,7 @@ fun CardTask(
     task: TaskDto,
     assigneeAvatarUrl: String? = null,
     assigneeName: String? = null,
-    onClick: (() -> Unit)? = null,   // <- al final para usar trailing lambda
+    onClick: (() -> Unit)? = null,
 ) {
     val bg = when (task.priority) {
         TaskPriority.HIGH   -> Color(0xFFF1797A)

@@ -15,7 +15,7 @@ class AuthRepository(private val api: AuthApi = ApiFactory.auth) {
         return res.token
     }
 
-    // ➜ UI manda username y aquí lo partimos en name / lastName
+
     suspend fun signUpWithUsername(username: String, email: String, password: String): UserDto {
         val (name, last) = splitUsername(username)
         return api.signUp(

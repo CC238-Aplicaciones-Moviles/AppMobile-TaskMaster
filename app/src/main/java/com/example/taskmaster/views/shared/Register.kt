@@ -31,17 +31,17 @@ fun Register(context: Context, nav: NavHostController) {
     val error by vm.error.collectAsState()
     val signedUpUser by vm.signedUpUser.collectAsState()
 
-    // --- Solo 3 campos ---
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var passVisible by remember { mutableStateOf(false) }
 
-    // Al completar sign-up: guardar email+pass y volver a Login (sin auto-login)
+
     LaunchedEffect(signedUpUser) {
         if (signedUpUser != null) {
             Prefs.saveEmailAndPassword(context, email, password)
-            nav.popBackStack() // vuelve a login
+            nav.popBackStack()
         }
     }
 
@@ -139,7 +139,7 @@ fun Register(context: Context, nav: NavHostController) {
                         )
                     )
 
-                    // Username (se dividirá en name / lastName en el repo)
+                    // Username
                     TextField(
                         value = username,
                         onValueChange = { username = it },

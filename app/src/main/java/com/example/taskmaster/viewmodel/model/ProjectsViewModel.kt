@@ -76,7 +76,7 @@ class ProjectsViewModel(
     fun loadById(id: Long) = viewModelScope.launch {
         runCatching { repo.getById(id) }
             .onSuccess { _current.value = it }
-            .onFailure { /* podrías exponer error si quieres */ }
+            .onFailure {  }
     }
 
     fun update(
@@ -84,7 +84,7 @@ class ProjectsViewModel(
         name: String,
         description: String,
         imageUrl: String,
-        budget: Double?,        // <- puede venir nulo desde la UI
+        budget: Double?,
         endDate: String,
         status: String
     ) = viewModelScope.launch {

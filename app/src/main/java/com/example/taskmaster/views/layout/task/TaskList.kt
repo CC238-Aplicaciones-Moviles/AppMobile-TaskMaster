@@ -10,7 +10,7 @@ import com.example.taskmaster.viewmodel.data.tasks.TaskDto
 @Composable
 fun TaskList(
     tasks: List<TaskDto>,
-    onTaskClick: (TaskDto) -> Unit = {}   // <- callback opcional
+    onTaskClick: (TaskDto) -> Unit = {}
 ) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         items(items = tasks, key = { it.taskId }) { task ->

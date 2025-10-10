@@ -27,7 +27,7 @@ class AuthViewModel(
         _token.value = repo.signIn(email, password)
     }
 
-    // ➜ usaremos este desde Register
+
     fun signUpUsername(username: String, email: String, password: String) =
         launchCatching(_isLoading, _error) {
             _signedUpUser.value = repo.signUpWithUsername(username, email, password)
