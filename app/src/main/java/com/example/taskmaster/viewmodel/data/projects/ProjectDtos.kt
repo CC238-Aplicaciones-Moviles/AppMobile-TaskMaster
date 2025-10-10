@@ -32,4 +32,19 @@ data class ProjectUpdateRequest(
     val endDate: String
 )
 
+data class ProjectStats(
+    val totalTasks: Int = 0,
+    val overdueTasks: Int = 0,
+    val bestMember: String = "Ninguno",
+    val worstMember: String = "Ninguno",
+    val todoTasks: Int = 0,
+    val inProgressTasks: Int = 0,
+    val doneTasks: Int = 0,
+    val highPriorityTasks: Int = 0,
+    val mediumPriorityTasks: Int = 0,
+    val lowPriorityTasks: Int = 0,
+    val budget: Double = 0.0,
+    val usedBudget: Double = 0.0
+)
+
 data class ProjectCodeRequest(val code: String)
