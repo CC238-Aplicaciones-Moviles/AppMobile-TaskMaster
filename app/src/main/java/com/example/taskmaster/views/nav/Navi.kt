@@ -24,6 +24,7 @@ import com.example.taskmaster.views.layout.project.ProjectCreate
 import com.example.taskmaster.views.layout.project.ProjectSettings
 import com.example.taskmaster.views.layout.project.ProjectStats
 import com.example.taskmaster.views.layout.project.ProjectTasks
+import com.example.taskmaster.views.layout.task.CreateTask
 
 data class BottomTab(val route: String, val icon: Int)
 
@@ -126,6 +127,12 @@ fun Navi(context: Context) {
             ) { entry ->
                 val id = entry.arguments?.getLong("projectId") ?: return@composable
                 ProjectStats(nav, projectId = id)
+            }
+            composable("taskCreate/{projectId}",
+                arguments = listOf(navArgument("projectId") { type = NavType.LongType })
+            ) { backStack ->
+                val pid = backStack.arguments?.getLong("projectId") ?: return@composable
+                CreateTask(nav = nav, projectId = pid)
             }
 
 
