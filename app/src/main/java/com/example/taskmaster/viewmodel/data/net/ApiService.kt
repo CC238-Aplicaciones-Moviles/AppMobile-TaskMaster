@@ -3,6 +3,7 @@ package com.example.taskmaster.viewmodel.data.net
 import com.example.taskmaster.viewmodel.data.auth.LoginRequest
 import com.example.taskmaster.viewmodel.data.auth.LoginResponse
 import com.example.taskmaster.viewmodel.data.auth.SignUpRequest
+import com.example.taskmaster.viewmodel.data.notifications.NotificationDto
 import com.example.taskmaster.viewmodel.data.projects.ProjectCodeRequest
 import com.example.taskmaster.viewmodel.data.projects.ProjectCreateRequest
 import com.example.taskmaster.viewmodel.data.projects.ProjectDto
@@ -42,6 +43,8 @@ interface UsersApi {
 
     @GET("api/v1/users/email/{email}")
     suspend fun getUserByEmail(@Path("email") email: String): UserDto
+
+
 }
 
 /** ---- PROJECTS ---- **/
@@ -130,4 +133,12 @@ interface TasksApi {
         @Path("projectId") projectId: Long,
         @Path("priority") priority: TaskPriority
     ): List<TaskDto>
+}
+
+
+interface NotificationsApi {
+
+    // GET /api/v1/notifications/me
+    @GET("api/v1/notifications/me")
+    suspend fun getMyNotifications(): List<NotificationDto>
 }

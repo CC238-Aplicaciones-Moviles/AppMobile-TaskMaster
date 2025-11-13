@@ -17,8 +17,11 @@ import com.example.taskmaster.views.shared.Login
 import com.example.taskmaster.views.shared.Register
 import com.example.taskmaster.views.layout.task.Task
 import com.example.taskmaster.views.layout.Calendar
-import com.example.taskmaster.views.layout.Notifiations
+
+import com.example.taskmaster.views.layout.notification.Notifiations
 import com.example.taskmaster.views.layout.UserProfile
+import com.example.taskmaster.views.layout.project.MemberList
+import com.example.taskmaster.views.layout.project.Membership
 import com.example.taskmaster.views.layout.project.Proyect
 import com.example.taskmaster.views.layout.project.ProjectCreate
 import com.example.taskmaster.views.layout.project.ProjectSettings
@@ -48,6 +51,7 @@ fun Navi(context: Context) {
     val showBottomBar =
         currentRoute in baseRoutes ||
                 currentRoute == "projectCreate" ||
+                currentRoute == "membership" ||
                 currentRoute.startsWith("projectSettings") ||
                 currentRoute.startsWith("projectTasks") ||
                 currentRoute.startsWith("projectStats")
@@ -102,7 +106,7 @@ fun Navi(context: Context) {
             composable("login")    { Login(context, nav) }
             composable("register") { Register(context, nav) }
 
-            composable("projects") { Proyect(nav) }
+            composable("projects") { Proyect(context,nav) }
 
             composable("projectCreate") { ProjectCreate(nav) }
 
@@ -134,12 +138,20 @@ fun Navi(context: Context) {
                 val pid = backStack.arguments?.getLong("projectId") ?: return@composable
                 CreateTask(nav = nav, projectId = pid)
             }
-
+            composable(
+                route = "memberList/{projectId}",
+                arguments = listOf(navArgument("projectId") { type = NavType.LongType })
+            ) { entry ->
+                val pid = entry.arguments?.getLong("projectId") ?: return@composable
+                MemberList(nav = nav, projectId = pid)
+            }
 
             composable("tasks")        { Task() }
             composable("calendar")     { Calendar() }
             composable("notification") { Notifiations() }
             composable("profile")      { UserProfile(context, nav) }
+            composable("membership")   { Membership(nav) }
+
         }
     }
 }

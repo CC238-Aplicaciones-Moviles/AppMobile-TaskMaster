@@ -119,4 +119,11 @@ class ProjectsViewModel(
             .onFailure { _error.value = it.message }
         _isLoading.value = false
     }
+    fun removeMember(projectId: Long, memberId: Long) = viewModelScope.launch {
+        _isLoading.value = true
+        runCatching { repo.removeMember(projectId, memberId) }
+            .onSuccess { _error.value = null }
+            .onFailure { _error.value = it.message }
+        _isLoading.value = false
+    }
 }

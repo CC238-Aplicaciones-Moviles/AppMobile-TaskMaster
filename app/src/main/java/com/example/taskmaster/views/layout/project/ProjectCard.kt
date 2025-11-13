@@ -35,8 +35,15 @@ fun ProjectCard(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val imageModel = if (project.imageUrl.isNullOrBlank()) {
+                R.drawable.taskmaster_logoblanco
+            } else {
+                project.imageUrl
+            }
+
+
             AsyncImage(
-                model = project.imageUrl ?: R.drawable.ic_user,
+                model = imageModel,
                 contentDescription = null,
                 modifier = Modifier.size(44.dp).clip(RoundedCornerShape(22.dp))
             )

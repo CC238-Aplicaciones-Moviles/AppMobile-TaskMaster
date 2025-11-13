@@ -1,7 +1,6 @@
 package com.example.taskmaster.views.layout.project
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -100,7 +99,6 @@ fun ProjectTasks(
                             modifier = Modifier.size(20.dp)
                         )
                     },
-                    shape = RoundedCornerShape(24.dp),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor   = MaterialTheme.colorScheme.secondaryContainer,
                         unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,

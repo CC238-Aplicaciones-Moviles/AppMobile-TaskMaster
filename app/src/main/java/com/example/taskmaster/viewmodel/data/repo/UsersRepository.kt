@@ -23,4 +23,6 @@ class UsersRepository(
 
     // GET /api/v1/users/email/{email}
     suspend fun getByEmail(email: String): UserDto = api.getUserByEmail(email)
+
+
 }

@@ -8,7 +8,7 @@ data class UserDto(
     val lastName: String,
     val imageUrl: String?,
     val salary: Double?,
-    val projectResources: List<Any>
+    val projectIds: List<Any>
 )
 
 data class UserUpdateRequest(

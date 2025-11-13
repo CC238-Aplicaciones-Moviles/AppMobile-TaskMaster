@@ -1,8 +1,8 @@
-// views/layout/project/ProjectSettings.kt
 package com.example.taskmaster.views.layout.project
 
 import android.app.DatePickerDialog
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,10 +15,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.taskmaster.R
 import com.example.taskmaster.viewmodel.model.ProjectsViewModel
 import java.util.Calendar
 
@@ -42,6 +44,13 @@ fun ProjectSettings(
     var startDate by remember { mutableStateOf("") }
     var endDate by remember { mutableStateOf("") }
 
+    // diálogo para editar URL de imagen (igual que en Perfil)
+    var showImageDialog by remember { mutableStateOf(false) }
+    var tempUrl by remember { mutableStateOf("") }
+
+    // diálogo para confirmar borrado
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     LaunchedEffect(project) {
         project?.let {
             name        = it.name
@@ -52,6 +61,59 @@ fun ProjectSettings(
             startDate   = it.startDate.take(10)
             endDate     = it.endDate.take(10)
         }
+    }
+
+    if (showImageDialog) {
+        AlertDialog(
+            onDismissRequest = { showImageDialog = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    imageUrl = tempUrl.trim()
+                    showImageDialog = false
+                }) { Text("Usar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showImageDialog = false }) { Text("Cancelar") }
+            },
+            title = { Text("Cambiar imagen") },
+            text = {
+                Column {
+                    Text("Pega el enlace (PNG/JPG):")
+                    OutlinedTextField(
+                        value = tempUrl,
+                        onValueChange = { tempUrl = it },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        )
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        vm.delete(projectId)
+                        // después de borrar, vuelve a la lista de proyectos
+                        nav.navigate("projects") {
+                            popUpTo("projects") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                ) { Text("Borrar", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancelar")
+                }
+            },
+            title = { Text("Borrar proyecto") },
+            text = { Text("¿Estás seguro que deseas borrar este proyecto? Esta acción no se puede deshacer.") }
+        )
     }
 
     Scaffold(
@@ -83,39 +145,59 @@ fun ProjectSettings(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // --------- Avatar + key ----------
             item {
+                val imageModel = when {
+                    imageUrl.isNotBlank() -> imageUrl
+                    !project?.imageUrl.isNullOrBlank() -> project!!.imageUrl
+                    else -> R.drawable.ic_profile_placeholder
+                }
+
                 AsyncImage(
-                    model = imageUrl.ifBlank { project?.imageUrl },
+                    model = imageModel,
                     contentDescription = null,
                     modifier = Modifier
                         .size(72.dp)
                         .clip(CircleShape)
+                        .clickable {
+                            tempUrl = imageUrl.ifBlank { project?.imageUrl.orEmpty() }
+                            showImageDialog = true
+                        }
                 )
                 Spacer(Modifier.height(4.dp))
                 Text("#${project?.key.orEmpty()}", style = MaterialTheme.typography.labelLarge)
             }
 
+            // --------- Card de datos ----------
             item {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(12.dp))
+                        .background(Color.White, RoundedCornerShape(16.dp))
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outline,
+                            shape = RoundedCornerShape(16.dp)
+                        )
                         .padding(10.dp)
                 ) {
                     Label("Nombre del proyecto")
                     TextField(
-                        value = name, onValueChange = { name = it },
+                        value = name,
+                        onValueChange = { name = it },
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true, shape = RoundedCornerShape(8.dp),
+                        singleLine = true,
+                        shape = RoundedCornerShape(0.dp),
                         colors = fieldColors()
                     )
                     Divider(color = MaterialTheme.colorScheme.outline)
 
                     Label("Descripción")
                     TextField(
-                        value = description, onValueChange = { description = it },
+                        value = description,
+                        onValueChange = { description = it },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(0.dp),
                         colors = fieldColors()
                     )
                     Divider(color = MaterialTheme.colorScheme.outline)
@@ -123,10 +205,12 @@ fun ProjectSettings(
                     Label("Presupuesto")
                     TextField(
                         value = budgetText,
-                        onValueChange = { if (it.matches(Regex("""\d*\.?\d*"""))) budgetText = it },
+                        onValueChange = {
+                            if (it.matches(Regex("""\d*\.?\d*"""))) budgetText = it
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(0.dp),
                         prefix = { Text("S/ ") },
                         colors = fieldColors()
                     )
@@ -143,10 +227,13 @@ fun ProjectSettings(
                                 .fillMaxWidth()
                                 .clickable { expanded = true },
                             singleLine = true,
-                            shape = RoundedCornerShape(8.dp),
+                            shape = RoundedCornerShape(0.dp),
                             colors = fieldColors()
                         )
-                        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
                             listOf("PLANNED", "IN_PROGRESS", "COMPLETED").forEach { s ->
                                 DropdownMenuItem(
                                     onClick = { status = s; expanded = false },
@@ -157,35 +244,51 @@ fun ProjectSettings(
                     }
                     Divider(color = MaterialTheme.colorScheme.outline)
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Column(Modifier.weight(1f)) {
                             Label("Fecha inicio")
-                            DateField(value = startDate, onPick = { startDate = it }, enabled = false)
+                            DateField(
+                                value = startDate,
+                                onPick = { startDate = it },
+                                enabled = false
+                            )
                         }
                         Column(Modifier.weight(1f)) {
                             Label("Fecha fin")
-                            DateField(value = endDate, onPick = { endDate = it })
+                            DateField(
+                                value = endDate,
+                                onPick = { endDate = it }
+                            )
                         }
                     }
                 }
             }
 
+            // --------- Botones inferiores ----------
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Button(
-                        onClick = { /* miembros */ },
+                        onClick = {
+                            // 👉 ir a la lista de miembros del proyecto
+                            nav.navigate("memberList/$projectId")
+                        },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
+                        ),
+                        enabled = !isLoading
                     ) { Text("Lista de miembros") }
 
                     Button(
                         onClick = {
-                            val budgetDouble = budgetText.toDoubleOrNull() ?: project?.budget ?: 0.0
+                            val budgetDouble = budgetText.toDoubleOrNull()
+                                ?: project?.budget ?: 0.0
                             vm.update(
                                 id = projectId,
                                 name = name,
@@ -201,8 +304,12 @@ fun ProjectSettings(
                 }
             }
 
+            // --------- Borrar proyecto ----------
             item {
-                TextButton(onClick = { /* confirmar y borrar */ }) {
+                TextButton(
+                    onClick = { showDeleteDialog = true },
+                    enabled = !isLoading
+                ) {
                     Text("Borrar proyecto", color = MaterialTheme.colorScheme.error)
                 }
             }
@@ -216,7 +323,6 @@ fun ProjectSettings(
     }
 }
 
-
 @Composable
 fun Label(text: String) {
     Text(
@@ -229,12 +335,22 @@ fun Label(text: String) {
 
 @Composable
 fun fieldColors() = TextFieldDefaults.colors(
-    focusedContainerColor   = MaterialTheme.colorScheme.secondaryContainer,
-    unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-    disabledContainerColor  = MaterialTheme.colorScheme.secondaryContainer,
-    focusedTextColor        = MaterialTheme.colorScheme.onSurface,
-    unfocusedTextColor      = MaterialTheme.colorScheme.onSurface,
-    cursorColor             = MaterialTheme.colorScheme.primary
+    focusedContainerColor = Color.Transparent,
+    unfocusedContainerColor = Color.Transparent,
+    disabledContainerColor = Color.Transparent,
+
+    focusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
+    unfocusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
+    disabledTextColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f),
+
+    focusedIndicatorColor = Color.Transparent,
+    unfocusedIndicatorColor = Color.Transparent,
+    disabledIndicatorColor = Color.Transparent,
+    errorIndicatorColor = MaterialTheme.colorScheme.error,
+
+    cursorColor = MaterialTheme.colorScheme.primary,
+    focusedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer,
+    unfocusedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
 )
 
 @Composable
@@ -274,7 +390,7 @@ fun DateField(
         },
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(0.dp),
         colors = fieldColors()
     )
 }

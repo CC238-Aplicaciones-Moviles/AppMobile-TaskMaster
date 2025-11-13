@@ -3,6 +3,7 @@ package com.example.taskmaster.views.layout
 import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -39,16 +40,15 @@ fun UserProfile(
     val user by vm.user.collectAsState()
     var password by remember { mutableStateOf("") }
     var showPass by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         Prefs.loadEmail(context)?.let { vm.loadByEmail(it) }
         password = Prefs.loadPassword(context) ?: ""
-
     }
 
     // estado editable
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-
     var salaryText by remember { mutableStateOf("") }
     var imageUrl by remember { mutableStateOf<String?>(null) }
 
@@ -61,7 +61,6 @@ fun UserProfile(
         }
     }
 
-    // diálogo para pegar URL de imagen
     var showImageDialog by remember { mutableStateOf(false) }
     var tempUrl by remember { mutableStateOf(imageUrl.orEmpty()) }
 
@@ -74,7 +73,9 @@ fun UserProfile(
                     showImageDialog = false
                 }) { Text("Usar") }
             },
-            dismissButton = { TextButton(onClick = { showImageDialog = false }) { Text("Cancelar") } },
+            dismissButton = {
+                TextButton(onClick = { showImageDialog = false }) { Text("Cancelar") }
+            },
             title = { Text("Cambiar imagen") },
             text = {
                 Column {
@@ -91,18 +92,26 @@ fun UserProfile(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = "Perfil",
             style = MaterialTheme.typography.displayMedium,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
         )
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(4.dp))
 
-        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
             AsyncImage(
                 model = imageUrl ?: R.drawable.ic_profile_placeholder,
                 contentDescription = "Avatar",
@@ -118,14 +127,18 @@ fun UserProfile(
             )
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.
-                    background, RoundedCornerShape(16.dp))
-                .padding(12.dp)
+                .background(Color.White, RoundedCornerShape(16.dp))
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline, // Brownish900
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             Label("UserName")
             TextField(
@@ -133,7 +146,7 @@ fun UserProfile(
                 onValueChange = { username = it },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(0.dp),
                 colors = fieldColors()
             )
 
@@ -146,9 +159,10 @@ fun UserProfile(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = false,
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(0.dp),
                 colors = fieldColors(disabled = true)
             )
+
             Divider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
 
             Label("Contraseña")
@@ -158,7 +172,11 @@ fun UserProfile(
                 readOnly = true,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                visualTransformation = if (showPass) VisualTransformation.None else PasswordVisualTransformation(),
+                visualTransformation = if (showPass) {
+                    VisualTransformation.None
+                } else {
+                    PasswordVisualTransformation()
+                },
                 trailingIcon = {
                     IconButton(onClick = { showPass = !showPass }) {
                         Image(
@@ -170,7 +188,7 @@ fun UserProfile(
                         )
                     }
                 },
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(0.dp),
                 colors = fieldColors()
             )
 
@@ -183,20 +201,24 @@ fun UserProfile(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(0.dp),
                 colors = fieldColors()
             )
         }
+        // *********** FIN COLUMN DEL FORMULARIO ***********
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(24.dp))
 
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Button(
                 onClick = { /* aún no activo */ },
-                enabled = false,
+                enabled = true, // para que se vea mejor en el diseño
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer, // Blush100
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer    // Brownish900
                 )
             ) { Text("Unirte a un proyecto") }
 
@@ -205,7 +227,11 @@ fun UserProfile(
                     val salary = salaryText.toDoubleOrNull()
                     vm.updateProfile(username = username, imageUrl = imageUrl, salary = salary)
                 },
-                enabled = !isLoading
+                enabled = !isLoading,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,  // A62424
+                    contentColor = MaterialTheme.colorScheme.onPrimary   // White
+                )
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
@@ -230,7 +256,9 @@ fun UserProfile(
                     launchSingleTop = true
                 }
             }
-        ) { Text("Cerrar sesión", color = MaterialTheme.colorScheme.error) }
+        ) {
+            Text("Cerrar sesión", color = MaterialTheme.colorScheme.error)
+        }
 
         if (!error.isNullOrBlank()) {
             Spacer(Modifier.height(8.dp))
@@ -245,17 +273,37 @@ private fun Label(text: String) {
         text = text,
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSecondaryContainer,
-        modifier = Modifier.padding(start = 8.dp, top = 6.dp, bottom = 4.dp)
+        modifier = Modifier.padding(start = 4.dp, top = 6.dp, bottom = 4.dp)
     )
 }
 
 @Composable
-private fun fieldColors(disabled: Boolean = false) = TextFieldDefaults.colors(
-    focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-    unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-    disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-    disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-    cursorColor = MaterialTheme.colorScheme.primary
-)
+private fun fieldColors(disabled: Boolean = false): TextFieldColors {
+    val baseText = MaterialTheme.colorScheme.onSecondaryContainer // marrón
+    val disabledText = if (disabled) baseText.copy(alpha = 0.6f) else baseText
+
+    return TextFieldDefaults.colors(
+        // Fondo transparente para que se vea el blanco del card
+        focusedContainerColor = Color.Transparent,
+        unfocusedContainerColor = Color.Transparent,
+        disabledContainerColor = Color.Transparent,
+
+        // Texto marrón
+        focusedTextColor = baseText,
+        unfocusedTextColor = baseText,
+        disabledTextColor = disabledText,
+
+        // Indicador/underline invisible (ya usamos Divider)
+        focusedIndicatorColor = Color.Transparent,
+        unfocusedIndicatorColor = Color.Transparent,
+        disabledIndicatorColor = Color.Transparent,
+        errorIndicatorColor = MaterialTheme.colorScheme.error,
+
+        // Cursor y selección
+        cursorColor = MaterialTheme.colorScheme.primary,
+
+        // Labels (por si algún campo usa label interna)
+        focusedLabelColor = baseText,
+        unfocusedLabelColor = baseText
+    )
+}

@@ -26,11 +26,43 @@ class UsersViewModel(
     private val _user = MutableStateFlow<UserDto?>(null)
     val user: StateFlow<UserDto?> = _user
 
+
+    private val _members = MutableStateFlow<List<UserDto>>(emptyList())
+    val members: StateFlow<List<UserDto>> = _members
+
     fun loadByEmail(email: String) {
         scope.launch {
             try {
                 _isLoading.value = true
                 _user.value = repo.getByEmail(email)
+            } catch (e: Exception) {
+                _error.value = e.message
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun loadMembersForProject(projectId: Long) {
+        scope.launch {
+            try {
+                _isLoading.value = true
+                val all = repo.getAll()
+
+                val filtered = all.filter { u ->
+                    // Debe ser MEMBER
+                    u.roles.contains("ROLE_MEMBER") &&
+                            u.projectIds.any { pid ->
+                                when (pid) {
+                                    is Number -> pid.toLong() == projectId
+                                    is String -> pid.toLongOrNull() == projectId
+                                    else -> false
+                                }
+                            }
+                }
+
+                _members.value = filtered
+                _error.value = null
             } catch (e: Exception) {
                 _error.value = e.message
             } finally {

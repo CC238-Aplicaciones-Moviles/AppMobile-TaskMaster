@@ -18,7 +18,7 @@ data class ProjectDto(
 data class ProjectCreateRequest(
     val name: String,
     val description: String,
-    val imageUrl : String,
+    val imageUrl : String?,
     val budget: Double,
     val endDate: String
 )
