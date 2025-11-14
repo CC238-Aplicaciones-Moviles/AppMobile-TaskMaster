@@ -29,6 +29,7 @@ import com.example.taskmaster.views.layout.project.ProjectCreate
 import com.example.taskmaster.views.layout.project.ProjectSettings
 import com.example.taskmaster.views.layout.project.ProjectStats
 import com.example.taskmaster.views.layout.project.ProjectTasks
+import com.example.taskmaster.views.layout.project.UserStats
 import com.example.taskmaster.views.layout.task.CreateTask
 import com.example.taskmaster.views.layout.task.EditTask
 
@@ -160,6 +161,13 @@ fun Navi(context: Context) {
                 val tid = entry.arguments?.getLong("taskId") ?: return@composable
                 EditTask(nav = nav, projectId = pid, taskId = tid)
             }
+            composable(
+                route = "userStats/{userId}"
+            ) { backStackEntry ->
+                val userId = backStackEntry.arguments?.getString("userId")?.toLong() ?: 0L
+                UserStats(nav = nav, userId = userId)
+            }
+
 
             composable("tasks")        { Task() }
             composable("calendar")     { Calendar() }

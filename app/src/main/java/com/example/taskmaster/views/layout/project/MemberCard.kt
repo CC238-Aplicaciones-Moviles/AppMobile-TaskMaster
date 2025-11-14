@@ -37,7 +37,7 @@ fun MemberCard(
             containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        onClick = onClick          // 👈 card clickeable
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier
