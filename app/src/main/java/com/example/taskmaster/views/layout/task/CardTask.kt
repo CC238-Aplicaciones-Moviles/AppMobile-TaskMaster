@@ -35,9 +35,9 @@ fun CardTask(
         TaskPriority.MEDIUM -> "Media"
         TaskPriority.LOW -> "Baja"
     }
-    val assignedLabel = assigneeName
-        ?: task.assignedUserIds.firstOrNull()?.let { "Miembro $it" }
-        ?: "Sin asignar"
+
+    val assignedLabel = assigneeName ?: "Sin asignar"
+
 
     val content = @Composable {
         Row(

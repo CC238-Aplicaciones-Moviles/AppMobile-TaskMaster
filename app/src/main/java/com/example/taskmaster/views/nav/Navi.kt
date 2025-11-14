@@ -1,6 +1,8 @@
 package com.example.taskmaster.views.nav
 
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.*
@@ -28,9 +30,11 @@ import com.example.taskmaster.views.layout.project.ProjectSettings
 import com.example.taskmaster.views.layout.project.ProjectStats
 import com.example.taskmaster.views.layout.project.ProjectTasks
 import com.example.taskmaster.views.layout.task.CreateTask
+import com.example.taskmaster.views.layout.task.EditTask
 
 data class BottomTab(val route: String, val icon: Int)
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Navi(context: Context) {
     val nav = rememberNavController()
@@ -144,6 +148,17 @@ fun Navi(context: Context) {
             ) { entry ->
                 val pid = entry.arguments?.getLong("projectId") ?: return@composable
                 MemberList(nav = nav, projectId = pid)
+            }
+            composable(
+                route = "taskEdit/{projectId}/{taskId}",
+                arguments = listOf(
+                    navArgument("projectId") { type = NavType.LongType },
+                    navArgument("taskId") { type = NavType.LongType }
+                )
+            ) { entry ->
+                val pid = entry.arguments?.getLong("projectId") ?: return@composable
+                val tid = entry.arguments?.getLong("taskId") ?: return@composable
+                EditTask(nav = nav, projectId = pid, taskId = tid)
             }
 
             composable("tasks")        { Task() }

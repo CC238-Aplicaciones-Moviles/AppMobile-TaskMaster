@@ -1,4 +1,3 @@
-// com/example/taskmaster/viewmodel/model/AuthViewModel.kt
 package com.example.taskmaster.viewmodel.model
 
 import androidx.lifecycle.ViewModel

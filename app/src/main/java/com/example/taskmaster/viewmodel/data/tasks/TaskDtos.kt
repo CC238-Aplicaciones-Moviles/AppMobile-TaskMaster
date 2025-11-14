@@ -15,7 +15,7 @@ data class TaskDto(
     val updatedAt: String
 )
 
-enum class TaskStatus { TO_DO, IN_PROGRESS, DONE, CANCELED }
+enum class TaskStatus { TO_DO, IN_PROGRESS, DONE }
 enum class TaskPriority { LOW, MEDIUM, HIGH }
 
 // Requests
@@ -36,7 +36,8 @@ data class TaskUpdateRequest(
     val startDate: String,
     val endDate: String,
     val priority: TaskPriority,
-    val status: TaskStatus
+    val status: TaskStatus,
+    val assignedUserIds: List<Long>
 )
 
 data class TaskAssignRequest(val userId: Long)

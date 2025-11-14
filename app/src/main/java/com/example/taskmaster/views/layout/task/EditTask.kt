@@ -18,51 +18,86 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.taskmaster.R
 import com.example.taskmaster.views.layout.project.ProjectTopBar
-import com.example.taskmaster.viewmodel.model.ProjectsViewModel
-import com.example.taskmaster.viewmodel.model.TasksViewModel
-import com.example.taskmaster.viewmodel.data.tasks.TaskCreateRequest
 import com.example.taskmaster.viewmodel.data.tasks.TaskPriority
 import com.example.taskmaster.viewmodel.data.tasks.TaskStatus
-import com.example.taskmaster.viewmodel.data.users.UserDto
+import com.example.taskmaster.viewmodel.data.tasks.TaskUpdateRequest
+import com.example.taskmaster.viewmodel.model.ProjectsViewModel
+import com.example.taskmaster.viewmodel.model.TasksViewModel
 import com.example.taskmaster.viewmodel.ui.users.UsersViewModel
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateTask(
+fun EditTask(
     nav: NavHostController,
     projectId: Long,
+    taskId: Long,
     projectsVm: ProjectsViewModel = remember { ProjectsViewModel() },
     tasksVm: TasksViewModel = remember { TasksViewModel() },
     usersVm: UsersViewModel = remember { UsersViewModel() }
 ) {
     val isLoading by tasksVm.isLoading.collectAsState()
-    val taskError by tasksVm.error.collectAsState()
+    val error by tasksVm.error.collectAsState()
     val project by projectsVm.current.collectAsState()
-
-    // estados de miembros
+    val task by tasksVm.selected.collectAsState()
     val members by usersVm.members.collectAsState()
-    val membersLoading by usersVm.isLoading.collectAsState()
-    val membersError by usersVm.error.collectAsState()
 
-    LaunchedEffect(projectId) {
-        projectsVm.loadById(projectId)
-        usersVm.loadMembersForProject(projectId)
-    }
-
+    // ------- ESTADO DEL FORM -------
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var startDate by remember { mutableStateOf("") }
     var endDate by remember { mutableStateOf("") }
+
     var priority by remember { mutableStateOf(TaskPriority.MEDIUM) }
     var priorityMenu by remember { mutableStateOf(false) }
 
+    var status by remember { mutableStateOf(TaskStatus.TO_DO) }
+    var statusMenu by remember { mutableStateOf(false) }
+
+    var selectedMemberId by remember { mutableStateOf<Long?>(null) }
     var memberMenu by remember { mutableStateOf(false) }
-    var selectedMember by remember { mutableStateOf<UserDto?>(null) }
+
+    var initialized by remember { mutableStateOf(false) }
+
+    // Cargar proyecto, tarea y miembros
+    LaunchedEffect(projectId, taskId) {
+        projectsVm.loadById(projectId)
+        tasksVm.loadById(taskId)
+        usersVm.loadMembersForProject(projectId)
+    }
+
+    // Rellenar campos cuando llegue la tarea (una sola vez)
+    LaunchedEffect(task) {
+        if (task != null && !initialized) {
+            title = task!!.title
+            description = task!!.description
+            startDate = task!!.startDate.take(10)
+            endDate   = task!!.endDate.take(10)
+
+            // String -> enum
+            val rawPriority = task!!.priority?.toString()?.uppercase()
+            priority = when (rawPriority) {
+                "HIGH"   -> TaskPriority.HIGH
+                "LOW"    -> TaskPriority.LOW
+                else     -> TaskPriority.MEDIUM
+            }
+
+            val rawStatus = task!!.status?.toString()?.uppercase()
+            status = when (rawStatus) {
+                "IN_PROGRESS" -> TaskStatus.IN_PROGRESS
+                "DONE"        -> TaskStatus.DONE
+                else          -> TaskStatus.TO_DO
+            }
+
+            selectedMemberId = task!!.assignedUserIds.firstOrNull()
+            initialized = true
+        }
+    }
 
     Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         ProjectTopBar(title = project?.name ?: "Proyecto", onBack = { nav.popBackStack() })
 
+        // Sub-topbar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -78,7 +113,7 @@ fun CreateTask(
                 )
             }
             Text(
-                text = "Crear tarea",
+                text = "Editar tarea",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                 textAlign = TextAlign.Center,
@@ -100,7 +135,7 @@ fun CreateTask(
                 PinkField(description, singleLine = false) { description = it }
             }
 
-            // PRIORIDAD
+            // ------- PRIORIDAD -------
             LabeledField("Prioridad") {
                 ExposedDropdownMenuBox(
                     expanded = priorityMenu,
@@ -108,9 +143,9 @@ fun CreateTask(
                 ) {
                     OutlinedTextField(
                         value = when (priority) {
-                            TaskPriority.HIGH -> "Alta"
+                            TaskPriority.HIGH   -> "Alta"
                             TaskPriority.MEDIUM -> "Media"
-                            TaskPriority.LOW -> "Baja"
+                            TaskPriority.LOW    -> "Baja"
                         },
                         onValueChange = {},
                         readOnly = true,
@@ -126,37 +161,29 @@ fun CreateTask(
                         onDismissRequest = { priorityMenu = false }
                     ) {
                         DropdownMenuItem(text = { Text("Alta") }, onClick = {
-                            priority = TaskPriority.HIGH
-                            priorityMenu = false
+                            priority = TaskPriority.HIGH; priorityMenu = false
                         })
                         DropdownMenuItem(text = { Text("Media") }, onClick = {
-                            priority = TaskPriority.MEDIUM
-                            priorityMenu = false
+                            priority = TaskPriority.MEDIUM; priorityMenu = false
                         })
                         DropdownMenuItem(text = { Text("Baja") }, onClick = {
-                            priority = TaskPriority.LOW
-                            priorityMenu = false
+                            priority = TaskPriority.LOW; priorityMenu = false
                         })
                     }
                 }
             }
 
-            // ASIGNAR A (miembro)
-            LabeledField("Asignar a") {
+            // ------- ESTADO -------
+            LabeledField("Estado") {
                 ExposedDropdownMenuBox(
-                    expanded = memberMenu,
-                    onExpandedChange = {
-                        if (!membersLoading && members.isNotEmpty()) {
-                            memberMenu = !memberMenu
-                        }
-                    }
+                    expanded = statusMenu,
+                    onExpandedChange = { statusMenu = !statusMenu }
                 ) {
                     OutlinedTextField(
-                        value = when {
-                            membersLoading -> "Cargando miembros..."
-                            !membersError.isNullOrBlank() -> "Error al cargar miembros"
-                            selectedMember != null -> "${selectedMember!!.name} ${selectedMember!!.lastName}"
-                            else -> "Selecciona un miembro"
+                        value = when (status) {
+                            TaskStatus.TO_DO       -> "Por hacer"
+                            TaskStatus.IN_PROGRESS -> "En progreso"
+                            TaskStatus.DONE        -> "Completada"
                         },
                         onValueChange = {},
                         readOnly = true,
@@ -164,22 +191,64 @@ fun CreateTask(
                             .menuAnchor()
                             .fillMaxWidth(),
                         singleLine = true,
-                        enabled = !membersLoading && members.isNotEmpty(),
                         shape = RoundedCornerShape(10.dp),
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = memberMenu)
-                        }
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(statusMenu) }
+                    )
+                    ExposedDropdownMenu(
+                        expanded = statusMenu,
+                        onDismissRequest = { statusMenu = false }
+                    ) {
+                        DropdownMenuItem(text = { Text("Por hacer") }, onClick = {
+                            status = TaskStatus.TO_DO; statusMenu = false
+                        })
+                        DropdownMenuItem(text = { Text("En progreso") }, onClick = {
+                            status = TaskStatus.IN_PROGRESS; statusMenu = false
+                        })
+                        DropdownMenuItem(text = { Text("Completada") }, onClick = {
+                            status = TaskStatus.DONE; statusMenu = false
+                        })
+                    }
+                }
+            }
+
+            // ------- MIEMBRO -------
+            LabeledField("Miembro asignado") {
+                ExposedDropdownMenuBox(
+                    expanded = memberMenu,
+                    onExpandedChange = { memberMenu = !memberMenu }
+                ) {
+                    val selectedName = selectedMemberId?.let { id ->
+                        members.firstOrNull { it.id == id }?.let { "${it.name} ${it.lastName}" }
+                    } ?: "Sin asignar"
+
+                    OutlinedTextField(
+                        value = selectedName,
+                        onValueChange = {},
+                        readOnly = true,
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(10.dp),
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(memberMenu) }
                     )
 
                     ExposedDropdownMenu(
                         expanded = memberMenu,
                         onDismissRequest = { memberMenu = false }
                     ) {
-                        members.forEach { member ->
+                        DropdownMenuItem(
+                            text = { Text("Sin asignar") },
+                            onClick = {
+                                selectedMemberId = null
+                                memberMenu = false
+                            }
+                        )
+                        members.forEach { m ->
                             DropdownMenuItem(
-                                text = { Text("${member.name} ${member.lastName}") },
+                                text = { Text("${m.name} ${m.lastName}") },
                                 onClick = {
-                                    selectedMember = member
+                                    selectedMemberId = m.id
                                     memberMenu = false
                                 }
                             )
@@ -188,10 +257,7 @@ fun CreateTask(
                 }
             }
 
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 LabeledField("Fecha inicio", Modifier.weight(1f)) {
                     DateField(value = startDate) { startDate = it }
                 }
@@ -205,23 +271,21 @@ fun CreateTask(
             Button(
                 onClick = {
                     if (title.isNotBlank() && endDate.isNotBlank()) {
-                        val req = TaskCreateRequest(
-                            projectId = projectId,
+                        val req = TaskUpdateRequest(
                             title = title,
                             description = description,
                             startDate = startDate,
                             endDate = endDate,
-                            status = TaskStatus.TO_DO.name,
-                            priority = priority.name,
-                            // 👉 aquí se manda el id del miembro
-                            assignedUserIds = selectedMember?.let { listOf(it.id) } ?: emptyList()
+                            status = status,            // 👈 enum, NO .name
+                            priority = priority,        // 👈 enum, NO .name
+                            assignedUserIds = selectedMemberId?.let { listOf(it) } ?: emptyList()
                         )
-                        tasksVm.create(req)
+                        tasksVm.update(taskId, req)
                         nav.popBackStack()
                     }
                 },
                 shape = RoundedCornerShape(12.dp),
-                enabled = !isLoading,
+                enabled = !isLoading && task != null,
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .widthIn(min = 160.dp)
@@ -234,18 +298,18 @@ fun CreateTask(
                     )
                     Spacer(Modifier.width(8.dp))
                 }
-                Text("Crear", style = MaterialTheme.typography.titleMedium)
+                Text("Guardar cambios", style = MaterialTheme.typography.titleMedium)
             }
 
-            if (!taskError.isNullOrBlank()) {
+            if (!error.isNullOrBlank()) {
                 Spacer(Modifier.height(12.dp))
-                Text(taskError ?: "", color = MaterialTheme.colorScheme.error)
+                Text(error ?: "", color = MaterialTheme.colorScheme.error)
             }
         }
     }
 }
 
-/* ---------- helpers UI ---------- */
+/* ---------- helpers ---------- */
 
 @Composable
 private fun LabeledField(
