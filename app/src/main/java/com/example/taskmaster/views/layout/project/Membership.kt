@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -89,7 +90,7 @@ fun Membership(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Membresías") },
+                title = { Text("Membresias") },
                 navigationIcon = {
                     IconButton(onClick = { nav.popBackStack() }) {
                         Icon(
@@ -110,21 +111,20 @@ fun Membership(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(padding),
+            contentAlignment = Alignment.Center
         ) {
             LazyRow(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 32.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    .fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.spacedBy(24.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 items(plans) { plan ->
                     MembershipCard(
                         plan = plan,
                         onClick = {
-
                             // nav.navigate("checkout/${plan.id}")
                         }
                     )
@@ -143,31 +143,36 @@ private fun MembershipCard(
     Box(
         modifier = modifier
             .width(260.dp)
+            .height(420.dp), // para que todas se vean del mismo alto
+        contentAlignment = Alignment.TopCenter
     ) {
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxSize(),
             shape = RoundedCornerShape(28.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = MaterialTheme.colorScheme.onSurface
             ),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Column(
                 modifier = Modifier
+                    .fillMaxSize()
                     .padding(horizontal = 24.dp, vertical = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Dejo un espacio para que el badge de "Más popular" no tape el título
-                if (plan.isPopular) Spacer(Modifier.height(8.dp))
+                // espacio para el badge
+                if (plan.isPopular) Spacer(Modifier.height(10.dp))
 
                 Text(
                     text = plan.name,
                     style = MaterialTheme.typography.titleLarge.copy(
-                        fontSize = 28.sp,
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
-                    )
+                    ),
+                    textAlign = TextAlign.Center
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -186,7 +191,7 @@ private fun MembershipCard(
                             fontWeight = FontWeight.Bold
                         )
                     )
-                    Spacer(Modifier.width(4.dp))
+                    Spacer(Modifier.width(2.dp))
                     Text(
                         text = "/ mes",
                         style = MaterialTheme.typography.bodyMedium
@@ -197,28 +202,35 @@ private fun MembershipCard(
 
                 Text(
                     text = plan.subtitle,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center
                 )
 
                 Spacer(Modifier.height(16.dp))
 
-                plan.features.forEach { feature ->
-                    Text(
-                        text = feature,
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    plan.features.forEach { feature ->
+                        Text(
+                            text = feature,
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.weight(1f))
 
                 if (plan.id == "free") {
-                    // Botón tipo outline para el plan Gratis
                     OutlinedButton(
                         onClick = onClick,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
                         colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.secondary
-                        )
+                            contentColor = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
                             plan.buttonLabel,
@@ -226,13 +238,13 @@ private fun MembershipCard(
                         )
                     }
                 } else {
-                    // Botón sólido para Pro y Enterprise
                     Button(
                         onClick = onClick,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                        ),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
                             plan.buttonLabel,
@@ -243,7 +255,6 @@ private fun MembershipCard(
             }
         }
 
-        // Badge "Más popular" para el plan Pro
         if (plan.isPopular) {
             Surface(
                 shape = RoundedCornerShape(12.dp),
@@ -252,7 +263,7 @@ private fun MembershipCard(
                 shadowElevation = 4.dp,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .offset(y = (-12).dp)
+                    .offset(y = (-14).dp)
             ) {
                 Text(
                     text = "Más popular",
